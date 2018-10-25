@@ -2,27 +2,69 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-      "templatesBaseUri":{
-        "type": "string"
-      },
-      "prefix":{
-        "type": "string"
-      }
+        "templatesBaseUri":{
+            "type": "string"
+        },
+        "prefix": {
+            "type": "string",
+            "metadata": {
+                "description": "The prefix of the resources to create"
+            }          
+        },
+        "cmSku": {
+            "type": "object",
+            "metadata": {
+                "description": "The sku for the cm servers"
+            }  
+        },
+        "cdSku": {
+            "type": "object",
+            "metadata": {
+                "description": "The sku for the cd servers"
+            }  
+        },
+        "includeDeploymentSlot": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "Whether or not to include a staging deployment slot"
+            }
+        },
+        "minTlsVersion": {
+            "type": "string",
+            "defaultValue": "1.1",
+            "metadata": {
+                "description": "The minimum tls version for the service"
+            }
+        },
+        "numberOfWorkers": {
+            "type": "int",
+            "defaultValue": 1,
+            "metadata": {
+                "description": "The number of workers to assign to the app service within the app service plan"
+            }
+        },      
+        "customHostName":{
+            "type": "string",
+            "defaultValue": ""
+        }
+    },
+    "variables": { 
     },
     "resources": [
         {
             "apiVersion": "2015-01-01",
-            "name": "nestedTemplate",
+            "name": "CM-AppServicePlan",
             "type": "Microsoft.Resources/deployments",
             "properties": {
                 "mode": "incremental",
                 "templateLink": {
-                    "uri": "[concat(parameters('templatesBaseUri'), '/component-templates/app-service-plan.json')]",
+                    "uri": "[concat(parameters('templatesBaseUri'), 'component-templates/app-service-plan/arm-template.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
                     "name": {
-                        "value": "[concat(parameters('prefix'), '-cm']"
+                        "value": "[concat(parameters('prefix'), '-cm-', 'asp')]"
                     },
                     "sku": {
                         "value": "[parameters('cmSku')]"
@@ -32,24 +74,87 @@
         },
         {
             "apiVersion": "2015-01-01",
-            "name": "nestedTemplate",
+            "name": "CM-App",
             "type": "Microsoft.Resources/deployments",
             "properties": {
                 "mode": "incremental",
                 "templateLink": {
-                    "uri": "[concat(parameters('templatesBaseUri'), '/component-templates/app-service-plan.json')]",
+                    "uri": "[concat(parameters('templatesBaseUri'), 'component-templates/app-service/arm-template.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
                     "name": {
-                        "value": "[concat(parameters('prefix'), '-cd']"
+                        "value": "[concat(parameters('prefix'), '-cm-', 'app')]"
+                    },
+                    "appServicePlanName":{
+                        "value": "[concat(parameters('prefix'), '-cm-', 'asp')]"
+                    },
+                    "numberOfWorkers": {
+                        "value": "[parameters('numberOfWorkers')]"
+                    },
+                    "includeDeploymentSlot": {
+                        "value": "[parameters('includeDeploymentSlot')]"
+                    },
+                    "minTlsVersion": {
+                        "value": "[parameters('minTlsVersion')]"
+                    },
+                    "customHostName": {
+                        "value": "[parameters('customHostName')]"
+                    }
+                }
+            },
+            "dependsOn": [
+                "CM-AppServicePlan"
+            ]
+        },       
+        {
+            "apiVersion": "2015-01-01",
+            "name": "CD-AppServicePlan",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('templatesBaseUri'), 'component-templates/app-service-plan/arm-template.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[concat(parameters('prefix'), '-cd-', 'asp')]"
                     },
                     "sku": {
                         "value": "[parameters('cdSku')]"
                     }
                 }
             }
+        },
+        {
+            "apiVersion": "2015-01-01",
+            "name": "CD-App",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('templatesBaseUri'), 'component-templates/app-service/arm-template.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[concat(parameters('prefix'), '-cd-', 'app')]"
+                    },
+                    "appServicePlanName":{
+                        "value": "[concat(parameters('prefix'), '-cd-', 'asp')]"
+                    },
+                    "minTlsVersion": {
+                        "value": "[parameters('minTlsVersion')]"
+                    },
+                    "customHostName": {
+                        "value": "[parameters('customHostName')]"
+                    }
+                }
+            },
+            "dependsOn": [
+                "CD-AppServicePlan"
+            ]            
         }        
-    ],
-    "variables": { }
+    ]
   }

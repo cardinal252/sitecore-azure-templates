@@ -1,0 +1,99 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "templatesBaseUri":{
+            "type": "string"
+        },
+        "prefix": {
+            "type": "string",
+            "metadata": {
+                "description": "The prefix of the resources to create"
+            }            
+        },
+        "azsSku": {
+            "type": "string",
+            "allowedValues": [
+                "free",
+                "basic",
+                "standard",
+                "standard2",
+                "standard3"
+            ],
+            "metadata": {
+                "description": "The SKU of the search service you want to create."
+            }          
+        },
+        "azsReplicaCount": {
+            "type": "int",
+            "minValue": 1,
+            "maxValue": 12,
+            "defaultValue": 1,
+            "metadata": {
+                "description": "Replicas distribute search workloads across the service. You need 2 or more to support high availability (applies to Basic and Standard only)."
+            }
+        },
+        "azsPartitionCount": {
+            "type": "int",
+            "allowedValues": [
+                1,
+                2,
+                3,
+                4,
+                6,
+                12
+            ],
+            "defaultValue": 1,
+            "metadata": {
+                "description": "Partitions allow for scaling of document count as well as faster indexing by sharding your index over multiple Azure Search units."
+            }
+        }      
+    },
+    "variables": { 
+    },
+    "resources": [
+        {
+            "apiVersion": "2015-01-01",
+            "name": "Azure-Search",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('templatesBaseUri'), 'component-templates/azure-search/arm-template.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[concat(parameters('prefix'), '-cm-', 'azs')]"
+                    },
+                    "sku": {
+                        "value": "[parameters('azsSku')]"
+                    },
+                    "replicaCount": {
+                        "value": "[parameters('azsReplicaCount')]"
+                    },
+                    "partitionCount": {
+                        "value": "[parameters('azsPartitionCount')]"
+                    },                                     
+                }
+            }
+        },
+        {
+            "apiVersion": "2015-01-01",
+            "name": "App-Insights",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('templatesBaseUri'), '/component-templates/app-insights/arm-template.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[concat(parameters('prefix'), '-cm-', 'ai')]"
+                    }
+                }
+            }
+        }    
+    ]
+  }
