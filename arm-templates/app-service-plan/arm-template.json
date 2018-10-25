@@ -41,8 +41,7 @@
             "sku": "[parameters('sku')]",
             "kind": "[parameters('os')]",
             "properties":{
-                "name": "[parameters('name')]",
-                "reserved": "[variables('isLinux')]"
+                "name": "[parameters('name')]"
            }
         }
     ],
