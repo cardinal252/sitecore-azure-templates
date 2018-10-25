@@ -1,0 +1,55 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "templatesBaseUri":{
+        "type": "string"
+      },
+      "prefix":{
+        "type": "string"
+      }
+    },
+    "resources": [
+        {
+            "apiVersion": "2015-01-01",
+            "name": "nestedTemplate",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('templatesBaseUri'), '/component-templates/app-service-plan.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[concat(parameters('prefix'), '-cm']"
+                    },
+                    "sku": {
+                        "value": "[parameters('cmSku')]"
+                    }
+                }
+            }
+        },
+        {
+            "apiVersion": "2015-01-01",
+            "name": "nestedTemplate",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('templatesBaseUri'), '/component-templates/app-service-plan.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[concat(parameters('prefix'), '-cd']"
+                    },
+                    "sku": {
+                        "value": "[parameters('cdSku')]"
+                    }
+                }
+            }
+        }        
+    ],
+    "variables": { }
+  }
