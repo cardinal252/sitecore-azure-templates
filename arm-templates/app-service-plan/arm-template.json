@@ -1,0 +1,50 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "name": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the App Service Plan"
+            }
+        },
+        "sku": {
+            "type": "object",
+            "metadata": {
+                "description": "The SKU to use when building the App Service Plan"
+            }
+        },
+        "os": {
+            "type": "string",
+            "allowedValues":[
+                "Windows",
+                "Linux"
+            ],
+            "defaultValue": "Windows",
+            "metadata": {
+                "description": "Windows or Linux"
+            }
+        }
+    },
+    "variables": {
+        "isLinux": {
+            "type": "bool",
+            "value": "equals(parameters('os'), 'Linux')"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "name": "[parameters('name')]",
+            "apiVersion": "2016-09-01",
+            "location": "[resourceGroup().location]",
+            "sku": "[parameters('sku')]",
+            "kind": "[parameters('os')]",
+            "properties":{
+                "name": "[parameters('name')]",
+                "reserved": "[variables('isLinux')]"
+           }
+        }
+    ],
+    "outputs": {}
+}

@@ -1,0 +1,115 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "name": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the App Service"
+            }
+        },
+        "appServicePlanName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the App Service Plan"
+            }
+        },
+        "includeDeploymentSlot": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Whether or not to include a staging deployment slot"
+            }
+        },
+        "minTlsVersion": {
+            "type": "string",
+            "defaultValue": "1.0",
+            "metadata": {
+                "description": "The minimum tls version for the service"
+            }
+        },
+        "numberOfWorkers": {
+            "type": "int",
+            "defaultValue": 1,
+            "metadata": {
+                "description": "The number of workers to assign to the app service within the app service plan"
+            }
+        },
+        "customHostName": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "certificateThumbprint": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "This can be passed into the template via the reference function: [reference(resourceId(parameters('certificateResourceGroup'), 'Microsoft.Web/certificates', parameters('certificateName')), '2016-03-01').Thumbprint]"
+            }
+        }
+    },
+    "variables": {
+        "appServicePlanId": "[resourceId(parameters('appServicePlanRG'),'Microsoft.Web/serverfarms', parameters('appServicePlanName'))]",
+        "appServiceSettings": [
+            {
+                "name": "WEBSITE_NODE_DEFAULT_VERSION",
+                "value": "[parameters('nodeVersion')]"
+            }
+        ],
+        "useCustomHostname": "[greater(length(parameters('customHostname')), 0)]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/sites",
+            "name": "[parameters('name')]",
+            "apiVersion": "2016-08-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "serverFarmId": "[variables('appServicePlanId')]",
+                "clientAffinityEnabled": false,
+                "httpsOnly": true,
+                "siteConfig": {
+                    "alwaysOn": false,
+                    "minTlsVersion": "[parameters('minTlsVersion')]",
+                    "numberOfWorkers": "[parameters('numberOfWorkers')]"
+                }
+            },
+            "resources": [
+                {
+                    "condition": "[parameters('includeDeploymentSlot')]",
+                    "name": "staging",
+                    "type": "slots",
+                    "apiVersion": "2016-08-01",
+                    "location": "[resourceGroup().location]",
+                    "properties": {
+                        "serverFarmId": "[variables('appServicePlanId')]",
+                        "clientAffinityEnabled": false,
+                        "httpsOnly": true,
+                        "siteConfig": {
+                            "alwaysOn": false,
+                            "minTlsVersion": "[parameters('minTlsVersion')]",
+                            "numberOfWorkers": "[parameters('numberOfWorkers')]"
+                        }
+                    },
+                    "dependsOn": [
+                        "[parameters('name')]"
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/hostnameBindings",
+            "condition": "[variables('useCustomHostname')]",
+            "name": "[concat(parameters('name'), '/', if(variables('useCustomHostname'), parameters('customHostname'), 'placeholder'))]",
+            "apiVersion": "2016-08-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "sslState": "SniEnabled",
+                "thumbprint": "[parameters('certificateThumbprint')]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('name'))]"
+            ]
+        }
+    ],
+    "outputs": {}
+}
