@@ -5,23 +5,37 @@
         "templatesBaseUri":{
             "type": "string"
         },
-        "prefix": {
+        "deploymentId": {
             "type": "string",
             "metadata": {
                 "description": "The prefix of the resources to create"
             }          
-        },
+        },  
         "cmSku": {
             "type": "object",
             "metadata": {
                 "description": "The sku for the cm servers"
-            }  
+            },
+            "defaultValue": {
+                "name": "B3",
+                "tier": "Standard",
+                "size": "B3",
+                "family": "B",
+                "capacity": 1
+            }
         },
         "cdSku": {
             "type": "object",
             "metadata": {
                 "description": "The sku for the cd servers"
-            }  
+            }, 
+            "defaultValue": {
+                "name": "B3",
+                "tier": "Standard",
+                "size": "B3",
+                "family": "B",
+                "capacity": 1
+            }
         },
         "includeDeploymentSlot": {
             "type": "bool",
@@ -44,17 +58,41 @@
                 "description": "The number of workers to assign to the app service within the app service plan"
             }
         },      
-        "customHostName":{
+        "cmCustomHostName":{
             "type": "string",
             "defaultValue": ""
-        }
+        },
+        "cdCustomHostName":{
+            "type": "string",
+            "defaultValue": ""
+        },
+        "cmWebAspName":{
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "[concat(parameters('deploymentId'),'-cm-asp')]"
+        },
+        "cdWebAspName":{
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "[concat(parameters('deploymentId'),'-cd-asp')]"
+        },                  
+        "cmWebAppName":{
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "[concat(parameters('deploymentId'),'-cm-app')]"
+        },
+        "cdWebAppName":{
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "[concat(parameters('deploymentId'),'-cd-app')]"
+        }            
     },
     "variables": { 
     },
     "resources": [
         {
             "apiVersion": "2015-01-01",
-            "name": "CM-AppServicePlan",
+            "name": "[parameters('cmWebAspName')]",
             "type": "Microsoft.Resources/deployments",
             "properties": {
                 "mode": "incremental",
@@ -64,7 +102,7 @@
                 },
                 "parameters": {
                     "name": {
-                        "value": "[concat(parameters('prefix'), '-cm-', 'asp')]"
+                        "value": "[parameters('cmWebAspName')]"
                     },
                     "sku": {
                         "value": "[parameters('cmSku')]"
@@ -74,7 +112,7 @@
         },
         {
             "apiVersion": "2015-01-01",
-            "name": "CM-App",
+            "name": "[parameters('cmWebAppName')]",
             "type": "Microsoft.Resources/deployments",
             "properties": {
                 "mode": "incremental",
@@ -84,10 +122,10 @@
                 },
                 "parameters": {
                     "name": {
-                        "value": "[concat(parameters('prefix'), '-cm-', 'app')]"
+                        "value": "[parameters('cmWebAppName')]"
                     },
                     "appServicePlanName":{
-                        "value": "[concat(parameters('prefix'), '-cm-', 'asp')]"
+                        "value": "[parameters('cmWebAspName')]"
                     },
                     "numberOfWorkers": {
                         "value": "[parameters('numberOfWorkers')]"
@@ -99,17 +137,17 @@
                         "value": "[parameters('minTlsVersion')]"
                     },
                     "customHostName": {
-                        "value": "[parameters('customHostName')]"
+                        "value": "[parameters('cmCustomHostName')]"
                     }
                 }
             },
             "dependsOn": [
-                "CM-AppServicePlan"
+                "[parameters('cmWebAspName')]"
             ]
         },       
         {
             "apiVersion": "2015-01-01",
-            "name": "CD-AppServicePlan",
+            "name": "[parameters('cdWebAspName')]",
             "type": "Microsoft.Resources/deployments",
             "properties": {
                 "mode": "incremental",
@@ -119,7 +157,7 @@
                 },
                 "parameters": {
                     "name": {
-                        "value": "[concat(parameters('prefix'), '-cd-', 'asp')]"
+                        "value": "[parameters('cdWebAspName')]"
                     },
                     "sku": {
                         "value": "[parameters('cdSku')]"
@@ -129,7 +167,7 @@
         },
         {
             "apiVersion": "2015-01-01",
-            "name": "CD-App",
+            "name": "[parameters('cdWebAppName')]",
             "type": "Microsoft.Resources/deployments",
             "properties": {
                 "mode": "incremental",
@@ -139,21 +177,21 @@
                 },
                 "parameters": {
                     "name": {
-                        "value": "[concat(parameters('prefix'), '-cd-', 'app')]"
+                        "value": "[parameters('cdWebAppName')]"
                     },
                     "appServicePlanName":{
-                        "value": "[concat(parameters('prefix'), '-cd-', 'asp')]"
+                        "value": "[parameters('cdWebAspName')]"
                     },
                     "minTlsVersion": {
                         "value": "[parameters('minTlsVersion')]"
                     },
                     "customHostName": {
-                        "value": "[parameters('customHostName')]"
+                        "value": "[parameters('cdCustomHostName')]"
                     }
                 }
             },
             "dependsOn": [
-                "CD-AppServicePlan"
+                "[parameters('cdWebAspName')]"
             ]            
         }        
     ]

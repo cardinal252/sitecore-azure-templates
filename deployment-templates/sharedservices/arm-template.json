@@ -5,7 +5,7 @@
         "templatesBaseUri":{
             "type": "string"
         },
-        "prefix": {
+        "deploymentId": {
             "type": "string",
             "metadata": {
                 "description": "The prefix of the resources to create"
@@ -64,7 +64,7 @@
                 },
                 "parameters": {
                     "name": {
-                        "value": "[concat(parameters('prefix'), '-cm-', 'azs')]"
+                        "value": "[concat(parameters('deploymentId'), '-azs')]"
                     },
                     "sku": {
                         "value": "[parameters('azsSku')]"
@@ -90,7 +90,7 @@
                 },
                 "parameters": {
                     "name": {
-                        "value": "[concat(parameters('prefix'), '-cm-', 'ai')]"
+                        "value": "[concat(parameters('deploymentId'), '-ai')]"
                     }
                 }
             }

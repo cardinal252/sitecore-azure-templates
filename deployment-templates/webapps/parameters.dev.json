@@ -4,24 +4,6 @@
   "parameters": {
     "templatesBaseUri": {
       "value": "https://raw.githubusercontent.com/cardinal252/sitecore-azure-templates/master/"
-    },
-    "cmSku":{
-      "value": {
-          "name": "S1",
-          "tier": "Standard",
-          "size": "S1",
-          "family": "S",
-          "capacity": 2
-      }
-    },
-    "cdSku":{
-      "value": {
-          "name": "S1",
-          "tier": "Standard",
-          "size": "S1",
-          "family": "S",
-          "capacity": 1
-      }
     }    
   }
 }
